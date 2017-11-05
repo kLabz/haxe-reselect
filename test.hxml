@@ -1,0 +1,8 @@
+-js bin/test.js
+-main test.ReselectTests
+
+-cp src
+-lib buddy
+
+-D nodejs
+-D buddy-colors

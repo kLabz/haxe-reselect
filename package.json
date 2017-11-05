@@ -1,0 +1,28 @@
+{
+  "name": "haxe-reselect",
+  "version": "0.0.1",
+  "description": "Haxe externs and tools for Reselect.",
+  "keywords": [
+    "haxe",
+    "redux"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kLabz/haxe-reselect"
+  },
+  "bugs": {
+    "url": "https://github.com/kLabz/haxe-reselect/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Rudy G",
+    "email": "k@klabz.org",
+    "url": "https://github.com/kLabz"
+  },
+  "scripts": {
+    "test": "haxe test.hxml && node bin/test.js"
+  },
+  "devDependencies": {
+    "reselect": "^3.0.1"
+  }
+}

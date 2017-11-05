@@ -1,0 +1,16 @@
+{
+  "name": "reselect",
+  "description": "Haxe externs and tools for Reselect.",
+  "version": "0.0.1",
+  "releasenote": "Added `Reselect.createSelector(...)` and its tests. (See CHANGELOG.md)",
+  "url": "https://github.com/kLabz/haxe-reselect",
+  "license": "MIT",
+  "tags": [
+    "javascript",
+    "redux"
+  ],
+  "classPath": "src",
+  "contributors": [
+    "klabz"
+  ]
+}
