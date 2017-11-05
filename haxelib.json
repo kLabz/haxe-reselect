@@ -1,8 +1,8 @@
 {
   "name": "reselect",
   "description": "Haxe externs and tools for Reselect.",
-  "version": "0.0.1",
-  "releasenote": "Added `Reselect.createSelector(...)` and its tests. (See CHANGELOG.md)",
+  "version": "0.0.2",
+  "releasenote": "Basic implementation of the complete Reselect API, with tests. (See CHANGELOG.md)",
   "url": "https://github.com/kLabz/haxe-reselect",
   "license": "MIT",
   "tags": [

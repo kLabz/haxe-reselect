@@ -1,8 +1,13 @@
 package test;
 
+import haxe.Constraints.Function;
+import haxe.Serializer;
 import haxe.Timer;
 import buddy.SingleSuite;
 import reselect.Reselect.createSelector;
+import reselect.Reselect.createSelectorCreator;
+import reselect.Reselect.createStructuredSelector;
+import reselect.Reselect.defaultMemoize;
 
 using buddy.Should;
 using reselect.ReselectHelper;
@@ -289,9 +294,177 @@ class ReselectTests extends SingleSuite {
 				selector.getResultFunc().should.be(lastFunction);
 			});
 		});
+
+		describe("Reselect.defaultMemoize", {
+			it("should memoize functions", {
+				var called = 0;
+				var memoized = defaultMemoize(function(state) {
+					called++;
+					return state.a;
+				});
+
+				var o1 = {a: 1};
+				var o2 = {a: 2};
+
+				memoized(o1).should.be(1);
+				memoized(o1).should.be(1);
+				called.should.be(1);
+				memoized(o2).should.be(2);
+				called.should.be(2);
+			});
+
+			it("should memoize functions with multiple arguments", {
+				var memoized:Function = defaultMemoize(
+					Reflect.makeVarArgs(function(args:Array<Dynamic>) {
+						return Lambda.fold(args, function(sum, value) return sum + value, 0);
+					})
+				);
+
+				memoized(1, 2).should.be(3);
+				memoized(1).should.be(1);
+			});
+
+			it("should allow valueEquals override", {
+				var called = 0;
+				var memoized = defaultMemoize(
+					function(a) {
+						called++;
+						return a;
+					},
+					// a rather absurd equals operation we can verify in tests
+					function(a, b) return Math.abs(a - b) < 10
+				);
+
+				memoized(1).should.be(1);
+				memoized(2).should.be(1);
+				called.should.be(1);
+				memoized(42).should.be(42);
+				called.should.be(2);
+			});
+
+			it("should pass correct objects to equalityCheck", {
+				var fallthroughs = 0;
+				var shallowEqual = function(newVal, oldVal) {
+					if (newVal == oldVal) return true;
+					fallthroughs++;
+					return shallowCompare(newVal, oldVal);
+				};
+
+				var someObject = {foo: "bar"};
+				var anotherObject = {foo: "bar"};
+				var memoized = defaultMemoize(function(a) return a, shallowEqual);
+
+				// the first call to `memoized` doesn't hit because `defaultMemoize.lastArgs` is uninitialized
+				// and so `equalityCheck` is never called
+				memoized(someObject);
+				fallthroughs.should.be(0);
+
+				// the next call, with a different object reference, does fall through
+				memoized(anotherObject);
+				fallthroughs.should.be(1);
+
+				// the third call does not fall through because `defaultMemoize` passes `anotherObject` as
+				// both the `newVal` and `oldVal` params. This allows `shallowEqual` to be much more performant
+				// than if it had passed `someObject` as `oldVal`, even though `someObject` and `anotherObject`
+				// are shallowly equal
+				memoized(anotherObject);
+				fallthroughs.should.be(1);
+			});
+		});
+
+		describe("Reselect.createSelectorCreator", {
+			it("should allow valueEquals overriding", {
+				var createOverridenSelector = createSelectorCreator(
+					defaultMemoize,
+					// a rather absurd equals operation we can verify in tests
+					function(a, b) return Math.abs(a - b) < 10
+				);
+
+				var selector:TestState1->Int = createOverridenSelector(
+					function(state) return state.a,
+					function(a) return a
+				);
+
+				selector({a: 1}).should.be(1);
+				selector({a: 2}).should.be(1);
+				selector.recomputations().should.be(1);
+
+				selector({a: 42}).should.be(42);
+				selector.recomputations().should.be(2);
+			});
+
+			it("should allow custom memoize functions", {
+				var hashMemoizeCalls = 0;
+				var customSelectorCreator = createSelectorCreator(
+					hashMemoize,
+					Serializer.run,
+					function() {
+						hashMemoizeCalls++;
+					}
+				);
+
+				var selector:TestState1->Int = customSelectorCreator(
+					function(state) return state.a,
+					function(state) return state.b,
+					function(a, b) return a + b
+				);
+
+				selector({a: 1, b: 2}).should.be(3);
+				selector({a: 1, b: 2}).should.be(3);
+				selector.recomputations().should.be(1);
+				hashMemoizeCalls.should.be(2);
+
+				selector({a: 1, b: 3}).should.be(4);
+				selector.recomputations().should.be(2);
+				hashMemoizeCalls.should.be(3);
+
+				selector({a: 1, b: 3}).should.be(4);
+				selector.recomputations().should.be(2);
+				hashMemoizeCalls.should.be(4);
+
+				selector({a: 2, b: 3}).should.be(5);
+				selector.recomputations().should.be(3);
+				hashMemoizeCalls.should.be(5);
+			});
+		});
+
+		describe("Reselect.createStructuredSelector", {
+			it("should handle basic selectors", {
+				var selector = createStructuredSelector({
+					x: function(state) return state.a,
+					y: function(state) return state.b
+				});
+
+				var firstResult = selector({a: 1, b: 2});
+				shallowCompare(firstResult, {x: 1, y: 2}).should.be(true);
+				selector({a: 1, b: 2}).should.be(firstResult);
+
+				var secondResult = selector({a: 2, b: 2});
+				shallowCompare(secondResult, {x: 2, y: 2}).should.be(true);
+				selector({a: 2, b: 2}).should.be(secondResult);
+			});
+
+			it("should work with custom selector creator", {
+				var customSelectorCreator = createSelectorCreator(
+					defaultMemoize,
+					function(a, b) return a == b
+				);
+
+				var selector = createStructuredSelector({
+					x: function(state) return state.a,
+					y: function(state) return state.b
+				}, customSelectorCreator);
+
+				var firstResult = selector({a: 1, b: 2});
+				shallowCompare(firstResult, {x: 1, y: 2}).should.be(true);
+				selector({a: 1, b: 2}).should.be(firstResult);
+				shallowCompare(selector({a: 2, b: 2}), {x: 2, y: 2}).should.be(true);
+			});
+
+		});
 	}
 
-	public static function shallowCompare(a:Dynamic, b:Dynamic):Bool {
+	static function shallowCompare(a:Dynamic, b:Dynamic):Bool {
 		var aFields = Reflect.fields(a);
 		var bFields = Reflect.fields(b);
 
@@ -303,5 +476,22 @@ class ReselectTests extends SingleSuite {
 				return false;
 
 		return true;
+	}
+
+	static function hashMemoize(fun:Function, generateHash:Dynamic->String, logger:Void->Void):Function {
+		var cache = new Map<String, Dynamic>();
+
+		return Reflect.makeVarArgs(function(args:Array<Dynamic>) {
+			var hash = generateHash(args);
+			logger();
+
+			if (cache.exists(hash)) {
+				return cache.get(hash);
+			}
+
+			var ret = Reflect.callMethod(null, fun, args);
+			cache.set(hash, ret);
+			return ret;
+		});
 	}
 }
