@@ -460,7 +460,6 @@ class ReselectTests extends SingleSuite {
 				selector({a: 1, b: 2}).should.be(firstResult);
 				shallowCompare(selector({a: 2, b: 2}), {x: 2, y: 2}).should.be(true);
 			});
-
 		});
 	}
 
