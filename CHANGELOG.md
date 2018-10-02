@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.4 (2018-10-02)
+
+* Fix macro-in-macro call.
+* Added `-D reselect_global` to use global Reselect (thanks to cambiata's [PR](https://github.com/kLabz/haxe-reselect/pull/1)).
+
 ## 0.0.3 (2017-11-17)
 
 * Moved tests sources to avoid conflicts when using lib.

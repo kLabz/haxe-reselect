@@ -1,8 +1,8 @@
 {
   "name": "reselect",
   "description": "Haxe externs and tools for Reselect.",
-  "version": "0.0.3",
-  "releasenote": "Basic implementation of the complete Reselect API, with tests. (See CHANGELOG.md)",
+  "version": "0.0.4",
+  "releasenote": "Added `-D reselect_global` to use global Reselect. (See CHANGELOG.md)",
   "url": "https://github.com/kLabz/haxe-reselect",
   "license": "MIT",
   "tags": [
