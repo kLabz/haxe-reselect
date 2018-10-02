@@ -2,7 +2,6 @@ package reselect;
 
 import haxe.macro.Expr;
 import haxe.macro.Context;
-import haxe.macro.Compiler;
 
 enum SelectorKind {
 	State;
@@ -20,7 +19,7 @@ class ReselectMacro {
 		var createSelector = Lambda.find(fields, function(f) return f.name == 'createSelector');
 		if (createSelector != null) {
 			var maxArgs = DEFAULT_MAX_ARGS;
-			var definedMaxArgs = Compiler.getDefine("reselect-max-args");
+			var definedMaxArgs = Std.parseInt(Context.definedValue("reselect-max-args"));
 
 			if (Std.is(definedMaxArgs, Int) && definedMaxArgs < MAX_ARGS && definedMaxArgs > 0)
 				maxArgs = definedMaxArgs;
