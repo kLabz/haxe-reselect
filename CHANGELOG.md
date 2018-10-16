@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.5 (2018-10-16)
+
+* Better macro-in-macro fix for haxe 4 preview 5
+
 ## 0.0.4 (2018-10-02)
 
 * Fix macro-in-macro call.

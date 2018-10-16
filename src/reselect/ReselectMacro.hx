@@ -11,7 +11,8 @@ enum SelectorKind {
 class ReselectMacro {
 	static inline var MAX_ARGS:Int = 26;
 	static inline var DEFAULT_MAX_ARGS:Int = 5;
-	static inline var ARGS_TYPE_NAMES:String = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	static inline var MAX_ARGS_META = "reselect-max-args";
+	static inline var ARGS_TYPE_NAMES = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 	public static function buildCreateSelector():Array<Field> {
 		var fields:Array<Field> = Context.getBuildFields();
@@ -19,9 +20,11 @@ class ReselectMacro {
 		var createSelector = Lambda.find(fields, function(f) return f.name == 'createSelector');
 		if (createSelector != null) {
 			var maxArgs = DEFAULT_MAX_ARGS;
-			var definedMaxArgs = Std.parseInt(Context.definedValue("reselect-max-args"));
+			var definedMaxArgs = Context.defined(MAX_ARGS_META)
+				? Std.parseInt(Context.definedValue(MAX_ARGS_META))
+				: null;
 
-			if (Std.is(definedMaxArgs, Int) && definedMaxArgs < MAX_ARGS && definedMaxArgs > 0)
+			if (definedMaxArgs != null && definedMaxArgs < MAX_ARGS && definedMaxArgs > 0)
 				maxArgs = definedMaxArgs;
 
 			for (i in 0...maxArgs) {
